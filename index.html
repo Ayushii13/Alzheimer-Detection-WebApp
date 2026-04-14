@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Alzheimer AI Detection</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+/* BODY */
+
+body{
+font-family: 'Segoe UI', sans-serif;
+margin:0;
+background:#eef5fb;
+color:#333;
+}
+
+/* HEADER */
+
+header{
+background:linear-gradient(90deg,#0a6ebd,#00a6ff);
+color:white;
+padding:25px;
+text-align:center;
+font-size:28px;
+font-weight:bold;
+letter-spacing:1px;
+}
+
+/* MAIN CONTAINER */
+
+.container{
+max-width:900px;
+margin:auto;
+padding:40px 20px;
+}
+
+/* CARD */
+
+.card{
+background:white;
+padding:40px;
+border-radius:12px;
+box-shadow:0 8px 25px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+/* DESCRIPTION */
+
+.description{
+color:#666;
+margin-bottom:25px;
+}
+
+/* UPLOAD AREA */
+
+.upload-box{
+border:2px dashed #0a6ebd;
+padding:30px;
+border-radius:10px;
+transition:0.3s;
+}
+
+.upload-box:hover{
+background:#f4faff;
+}
+
+/* FILE INPUT */
+
+input[type=file]{
+margin-top:15px;
+font-size:15px;
+}
+
+/* BUTTON */
+
+button{
+background:#0a6ebd;
+color:white;
+border:none;
+padding:14px 28px;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+margin-top:20px;
+transition:0.3s;
+}
+
+button:hover{
+background:#084f8a;
+}
+
+/* IMAGE PREVIEW */
+
+.preview{
+margin-top:20px;
+}
+
+.preview img{
+max-width:250px;
+border-radius:10px;
+box-shadow:0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* RESULT */
+
+.result{
+margin-top:30px;
+padding:20px;
+border-radius:8px;
+background:#e6f4ff;
+font-size:20px;
+font-weight:bold;
+color:#0a6ebd;
+}
+
+/* LOADING SPINNER */
+
+.loader{
+display:none;
+margin-top:20px;
+}
+
+.spinner{
+border:5px solid #f3f3f3;
+border-top:5px solid #0a6ebd;
+border-radius:50%;
+width:40px;
+height:40px;
+animation:spin 1s linear infinite;
+margin:auto;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
+/* FOOTER */
+
+footer{
+margin-top:50px;
+background:#0a6ebd;
+color:white;
+text-align:center;
+padding:18px;
+font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+Alzheimer Disease Detection using AI
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<h2>AI Powered MRI Brain Analysis</h2>
+
+<p class="description">
+Upload an MRI brain scan image and our Deep Learning model will analyze it
+to detect possible Alzheimer’s stage.
+</p>
+
+<form action="/predict" method="post" enctype="multipart/form-data" onsubmit="showLoader()">
+
+<div class="upload-box">
+
+<h3>Select MRI Image</h3>
+
+<input type="file" name="file" accept="image/*" onchange="previewImage(event)" required>
+
+<br>
+
+<button type="submit">Analyze MRI</button>
+
+</div>
+
+</form>
+
+<div class="preview" id="imagePreview"></div>
+
+<div class="loader" id="loader">
+<div class="spinner"></div>
+<p>AI analyzing MRI scan...</p>
+</div>
+
+{% if prediction %}
+
+<div class="result">
+Prediction Result: {{ prediction }}
+</div>
+
+{% endif %}
+
+</div>
+
+</div>
+
+<footer>
+
+AI Medical Imaging System • Alzheimer Detection using Deep Learning
+
+</footer>
+
+<script>
+
+/* IMAGE PREVIEW */
+
+function previewImage(event){
+
+const preview=document.getElementById('imagePreview');
+
+preview.innerHTML="";
+
+const img=document.createElement("img");
+
+img.src=URL.createObjectURL(event.target.files[0]);
+
+preview.appendChild(img);
+
+}
+
+/* LOADER */
+
+function showLoader(){
+
+document.getElementById("loader").style.display="block";
+
+}
+
+</script>
+
+</body>
+</html>
