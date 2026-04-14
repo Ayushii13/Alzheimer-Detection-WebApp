@@ -1,3 +1,9 @@
+import os
+import gdown
+MODEL_PATH ="alzheimer_model.h5"
+if not os.path.exists(MODEL_PATH):
+    url="https://drive.google.com/file/d/1NmA7FzZo4gYitY7td9KK5GXxC1AYcglN"
+    gdown.download(url, MODEL_PATH, quite=False)
 from flask import Flask, render_template, request
 import os
 from predict import get_prediction
