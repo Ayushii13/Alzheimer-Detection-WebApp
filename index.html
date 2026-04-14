@@ -1,241 +1,709 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Alzheimer AI Detection</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alzheimer Detection AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
+    :root {
+      --navy: #0a1628;
+      --deep-blue: #0d2247;
+      --blue: #1a3f7a;
+      --accent: #4fa3e0;
+      --accent-glow: #6bb8f0;
+      --teal: #00c9b1;
+      --white: #f0f6ff;
+      --muted: #8ca6c8;
+      --card-bg: rgba(13, 34, 71, 0.7);
+      --border: rgba(79, 163, 224, 0.2);
+    }
 
-/* BODY */
+    html, body {
+      min-height: 100vh;
+      background: var(--navy);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--white);
+      overflow-x: hidden;
+    }
 
-body{
-font-family: 'Segoe UI', sans-serif;
-margin:0;
-background:#eef5fb;
-color:#333;
-}
+    /* === ANIMATED BACKGROUND === */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 30%, rgba(26, 63, 122, 0.45) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 80% 70%, rgba(0, 201, 177, 0.12) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 50% at 50% 0%, rgba(79, 163, 224, 0.1) 0%, transparent 60%);
+      z-index: 0;
+      pointer-events: none;
+    }
 
-/* HEADER */
+    /* === NEURAL NET SVG BACKGROUND === */
+    .neural-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.12;
+      pointer-events: none;
+    }
 
-header{
-background:linear-gradient(90deg,#0a6ebd,#00a6ff);
-color:white;
-padding:25px;
-text-align:center;
-font-size:28px;
-font-weight:bold;
-letter-spacing:1px;
-}
+    /* === LAYOUT === */
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 50px 20px 60px;
+    }
 
-/* MAIN CONTAINER */
+    /* === HEADER BADGE === */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(79, 163, 224, 0.12);
+      border: 1px solid rgba(79, 163, 224, 0.35);
+      border-radius: 100px;
+      padding: 6px 18px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 24px;
+      animation: fadeDown 0.6s ease both;
+    }
+    .badge-dot {
+      width: 7px; height: 7px;
+      background: var(--teal);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
 
-.container{
-max-width:900px;
-margin:auto;
-padding:40px 20px;
-}
+    /* === TITLE === */
+    .title-section {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeDown 0.7s ease 0.1s both;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #f0f6ff 0%, #4fa3e0 50%, #00c9b1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 14px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 300;
+      max-width: 420px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
 
-/* CARD */
+    /* === BRAIN ILLUSTRATION === */
+    .brain-container {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 40px;
+      animation: fadeUp 0.8s ease 0.2s both;
+    }
+    .brain-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(79, 163, 224, 0.25);
+      animation: ripple 3s ease-in-out infinite;
+    }
+    .brain-ring:nth-child(1) { inset: -20px; animation-delay: 0s; }
+    .brain-ring:nth-child(2) { inset: -38px; animation-delay: 0.6s; opacity: 0.6; }
+    .brain-ring:nth-child(3) { inset: -56px; animation-delay: 1.2s; opacity: 0.3; }
+    @keyframes ripple {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.04); opacity: 1; }
+    }
+    .brain-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79, 163, 224, 0.18) 0%, transparent 70%);
+    }
+    .brain-svg-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.card{
-background:white;
-padding:40px;
-border-radius:12px;
-box-shadow:0 8px 25px rgba(0,0,0,0.1);
-text-align:center;
-}
+    /* === MAIN CARD === */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 44px 44px 40px;
+      width: 100%;
+      max-width: 500px;
+      backdrop-filter: blur(20px);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 30px 60px rgba(0,0,0,0.35),
+        0 0 80px rgba(79,163,224,0.06);
+      animation: fadeUp 0.8s ease 0.3s both;
+    }
 
-/* DESCRIPTION */
+    /* === STATS ROW === */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .stat-pill {
+      flex: 1;
+      background: rgba(79, 163, 224, 0.07);
+      border: 1px solid rgba(79, 163, 224, 0.18);
+      border-radius: 12px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .stat-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
 
-.description{
-color:#666;
-margin-bottom:25px;
-}
+    /* === UPLOAD ZONE === */
+    .upload-label {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .upload-zone {
+      border: 2px dashed rgba(79, 163, 224, 0.3);
+      border-radius: 16px;
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(79, 163, 224, 0.03);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(79,163,224,0.08) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .upload-zone:hover {
+      border-color: rgba(79, 163, 224, 0.65);
+      background: rgba(79, 163, 224, 0.06);
+    }
+    .upload-zone:hover::before { opacity: 1; }
+    .upload-zone.drag-over {
+      border-color: var(--teal);
+      background: rgba(0, 201, 177, 0.06);
+      transform: scale(1.01);
+    }
+    .upload-icon {
+      margin: 0 auto 16px;
+      width: 52px; height: 52px;
+      background: rgba(79, 163, 224, 0.12);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+    }
+    .upload-zone:hover .upload-icon { transform: translateY(-3px); }
+    .upload-main-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+    .upload-sub-text {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .upload-sub-text span {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
 
-/* UPLOAD AREA */
+    /* File name preview */
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 201, 177, 0.08);
+      border: 1px solid rgba(0, 201, 177, 0.25);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--teal);
+    }
+    .file-preview.show { display: flex; }
 
-.upload-box{
-border:2px dashed #0a6ebd;
-padding:30px;
-border-radius:10px;
-transition:0.3s;
-}
+    /* === BUTTONS === */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-predict {
+      flex: 1;
+      padding: 15px 20px;
+      background: linear-gradient(135deg, #1a3f7a 0%, #4fa3e0 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(79, 163, 224, 0.3);
+    }
+    .btn-predict::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-predict:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(79, 163, 224, 0.45);
+    }
+    .btn-predict:hover::after { opacity: 1; }
+    .btn-predict:active { transform: translateY(0); }
 
-.upload-box:hover{
-background:#f4faff;
-}
+    .btn-clear {
+      padding: 15px 20px;
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+    .btn-clear:hover {
+      background: rgba(255,255,255,0.09);
+      color: var(--white);
+      border-color: rgba(255,255,255,0.2);
+    }
 
-/* FILE INPUT */
+    /* === RESULT CARD === */
+    .result-card {
+      margin-top: 24px;
+      border-radius: 16px;
+      padding: 22px 24px;
+      display: none;
+      animation: fadeUp 0.5s ease both;
+      border: 1px solid;
+    }
+    .result-card.show { display: block; }
+    .result-card.positive {
+      background: rgba(255, 90, 90, 0.08);
+      border-color: rgba(255, 90, 90, 0.25);
+    }
+    .result-card.normal {
+      background: rgba(0, 201, 177, 0.08);
+      border-color: rgba(0, 201, 177, 0.25);
+    }
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .result-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .positive .result-dot { background: #ff6b6b; }
+    .normal .result-dot { background: var(--teal); }
+    .result-title {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .result-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+    }
 
-input[type=file]{
-margin-top:15px;
-font-size:15px;
-}
+    /* === DIVIDER === */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 32px 0;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider-text {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
 
-/* BUTTON */
+    /* === STAGES INFO === */
+    .stages-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stage-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .stage-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
 
-button{
-background:#0a6ebd;
-color:white;
-border:none;
-padding:14px 28px;
-font-size:16px;
-border-radius:6px;
-cursor:pointer;
-margin-top:20px;
-transition:0.3s;
-}
+    /* === FOOTER === */
+    .footer {
+      margin-top: 36px;
+      font-size: 12px;
+      color: rgba(140, 166, 200, 0.5);
+      text-align: center;
+      animation: fadeUp 1s ease 0.6s both;
+    }
 
-button:hover{
-background:#084f8a;
-}
+    /* === ANIMATIONS === */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-/* IMAGE PREVIEW */
-
-.preview{
-margin-top:20px;
-}
-
-.preview img{
-max-width:250px;
-border-radius:10px;
-box-shadow:0 4px 15px rgba(0,0,0,0.2);
-}
-
-/* RESULT */
-
-.result{
-margin-top:30px;
-padding:20px;
-border-radius:8px;
-background:#e6f4ff;
-font-size:20px;
-font-weight:bold;
-color:#0a6ebd;
-}
-
-/* LOADING SPINNER */
-
-.loader{
-display:none;
-margin-top:20px;
-}
-
-.spinner{
-border:5px solid #f3f3f3;
-border-top:5px solid #0a6ebd;
-border-radius:50%;
-width:40px;
-height:40px;
-animation:spin 1s linear infinite;
-margin:auto;
-}
-
-@keyframes spin{
-0%{transform:rotate(0deg);}
-100%{transform:rotate(360deg);}
-}
-
-/* FOOTER */
-
-footer{
-margin-top:50px;
-background:#0a6ebd;
-color:white;
-text-align:center;
-padding:18px;
-font-size:14px;
-}
-
-</style>
+    /* Spinner */
+    .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-predict.loading .btn-text { display: none; }
+    .btn-predict.loading .spinner { display: block; }
+  </style>
 </head>
-
 <body>
 
-<header>
-Alzheimer Disease Detection using AI
-</header>
+<!-- Neural net SVG background -->
+<svg class="neural-bg" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="ng1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4fa3e0" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#4fa3e0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Connections -->
+  <g stroke="#4fa3e0" stroke-width="0.8" opacity="0.6">
+    <line x1="100" y1="200" x2="300" y2="150"/>
+    <line x1="300" y1="150" x2="500" y2="250"/>
+    <line x1="500" y1="250" x2="700" y2="180"/>
+    <line x1="700" y1="180" x2="900" y2="280"/>
+    <line x1="900" y1="280" x2="1100" y2="200"/>
+    <line x1="100" y1="400" x2="300" y2="350"/>
+    <line x1="300" y1="350" x2="500" y2="450"/>
+    <line x1="500" y1="450" x2="700" y2="380"/>
+    <line x1="700" y1="380" x2="900" y2="480"/>
+    <line x1="900" y1="480" x2="1100" y2="400"/>
+    <line x1="100" y1="600" x2="300" y2="550"/>
+    <line x1="300" y1="550" x2="500" y2="650"/>
+    <line x1="500" y1="650" x2="700" y2="580"/>
+    <line x1="700" y1="580" x2="900" y2="650"/>
+    <line x1="300" y1="150" x2="300" y2="350"/>
+    <line x1="300" y1="350" x2="300" y2="550"/>
+    <line x1="500" y1="250" x2="500" y2="450"/>
+    <line x1="500" y1="450" x2="500" y2="650"/>
+    <line x1="700" y1="180" x2="700" y2="380"/>
+    <line x1="700" y1="380" x2="700" y2="580"/>
+    <line x1="900" y1="280" x2="900" y2="480"/>
+    <line x1="100" y1="200" x2="300" y2="350"/>
+    <line x1="300" y1="150" x2="500" y2="450"/>
+    <line x1="500" y1="250" x2="700" y2="380"/>
+    <line x1="700" y1="180" x2="900" y2="480"/>
+    <line x1="300" y1="350" x2="500" y2="650"/>
+    <line x1="500" y1="450" x2="700" y2="580"/>
+  </g>
+  <!-- Nodes -->
+  <g fill="#4fa3e0">
+    <circle cx="100" cy="200" r="5"/><circle cx="300" cy="150" r="6"/><circle cx="500" cy="250" r="5"/>
+    <circle cx="700" cy="180" r="7"/><circle cx="900" cy="280" r="5"/><circle cx="1100" cy="200" r="4"/>
+    <circle cx="100" cy="400" r="4"/><circle cx="300" cy="350" r="5"/><circle cx="500" cy="450" r="6"/>
+    <circle cx="700" cy="380" r="5"/><circle cx="900" cy="480" r="6"/><circle cx="1100" cy="400" r="5"/>
+    <circle cx="100" cy="600" r="5"/><circle cx="300" cy="550" r="4"/><circle cx="500" cy="650" r="5"/>
+    <circle cx="700" cy="580" r="6"/><circle cx="900" cy="650" r="4"/>
+  </g>
+</svg>
 
-<div class="container">
+<div class="page-wrapper">
 
-<div class="card">
+  <div class="badge">
+    <span class="badge-dot"></span>
+    AI-Powered · Neuroimaging Analysis
+  </div>
 
-<h2>AI Powered MRI Brain Analysis</h2>
+  <!-- Brain Illustration -->
+  <div class="brain-container">
+    <div class="brain-ring"></div>
+    <div class="brain-ring"></div>
+    <div class="brain-ring"></div>
+    <div class="brain-glow"></div>
+    <div class="brain-svg-wrap">
+      <!-- Detailed brain SVG -->
+      <svg width="110" height="110" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="brainGrad" cx="45%" cy="40%" r="55%">
+            <stop offset="0%" stop-color="#6bb8f0"/>
+            <stop offset="60%" stop-color="#4fa3e0"/>
+            <stop offset="100%" stop-color="#1a3f7a"/>
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Left hemisphere -->
+        <path d="M55 20 C38 20, 20 28, 18 45 C16 58, 20 68, 26 76 C30 82, 36 88, 42 90 C46 92, 50 91, 54 90 L54 30 Z"
+              fill="url(#brainGrad)" opacity="0.95" filter="url(#glow)"/>
+        <!-- Right hemisphere -->
+        <path d="M55 20 C72 20, 90 28, 92 45 C94 58, 90 68, 84 76 C80 82, 74 88, 68 90 C64 92, 60 91, 56 90 L56 30 Z"
+              fill="url(#brainGrad)" opacity="0.88" filter="url(#glow)"/>
+        <!-- Center divide -->
+        <line x1="55" y1="20" x2="55" y2="90" stroke="rgba(10,22,40,0.4)" stroke-width="1.5"/>
+        <!-- Gyri lines left -->
+        <path d="M30 42 C34 38, 40 40, 42 44 C44 48, 40 52, 36 50" stroke="#a8d4f5" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M24 56 C28 52, 35 54, 36 59 C37 63, 33 66, 29 64" stroke="#a8d4f5" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M28 70 C33 67, 39 69, 40 74 C41 78, 38 81, 34 79" stroke="#a8d4f5" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M38 36 C42 34, 48 36, 49 40" stroke="#a8d4f5" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <!-- Gyri lines right -->
+        <path d="M80 42 C76 38, 70 40, 68 44 C66 48, 70 52, 74 50" stroke="#a8d4f5" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M86 56 C82 52, 75 54, 74 59 C73 63, 77 66, 81 64" stroke="#a8d4f5" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M82 70 C77 67, 71 69, 70 74 C69 78, 72 81, 76 79" stroke="#a8d4f5" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M72 36 C68 34, 62 36, 61 40" stroke="#a8d4f5" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <!-- Brain stem -->
+        <path d="M46 90 C46 96, 48 100, 55 101 C62 100, 64 96, 64 90" fill="#1a5a8a" opacity="0.8"/>
+        <!-- Subtle glow dots (neurons) -->
+        <circle cx="35" cy="47" r="2" fill="#00c9b1" opacity="0.7"/>
+        <circle cx="72" cy="53" r="1.5" fill="#00c9b1" opacity="0.6"/>
+        <circle cx="44" cy="72" r="1.5" fill="#6bb8f0" opacity="0.5"/>
+        <circle cx="68" cy="70" r="2" fill="#00c9b1" opacity="0.6"/>
+      </svg>
+    </div>
+  </div>
 
-<p class="description">
-Upload an MRI brain scan image and our Deep Learning model will analyze it
-to detect possible Alzheimer’s stage.
-</p>
+  <div class="title-section">
+    <h1>Alzheimer's Detection</h1>
+    <p class="subtitle">Upload a brain MRI scan and our deep learning model will analyze and classify the Alzheimer's stage with clinical precision.</p>
+  </div>
 
-<form action="/predict" method="post" enctype="multipart/form-data" onsubmit="showLoader()">
+  <div class="card">
 
-<div class="upload-box">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-pill">
+        <div class="stat-val">75.2%</div>
+        <div class="stat-label">Accuracy</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val">4</div>
+        <div class="stat-label">Stages</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val">&lt;3s</div>
+        <div class="stat-label">Analysis</div>
+      </div>
+    </div>
 
-<h3>Select MRI Image</h3>
+    <!-- Upload Form -->
+    <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
+      <label class="upload-label">Upload MRI Scan</label>
 
-<input type="file" name="file" accept="image/*" onchange="previewImage(event)" required>
+      <div class="upload-zone" id="dropZone">
+        <input type="file" name="file" id="fileInput" accept="image/*" required>
+        <div class="upload-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 16V8M12 8L9 11M12 8L15 11" stroke="#4fa3e0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 20H5C3.89 20 3 19.1 3 18V6C3 4.9 3.9 4 5 4H19C20.1 4 21 4.9 21 6V18C21 19.1 20.1 20 19 20H16" stroke="#4fa3e0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="upload-main-text">Drop your MRI image here</div>
+        <div class="upload-sub-text">or <span>browse files</span> to upload · PNG, JPG, DICOM</div>
+      </div>
 
-<br>
+      <div class="file-preview" id="filePreview">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#00c9b1" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#00c9b1" stroke-width="1.5"/></svg>
+        <span id="fileName">file.jpg</span>
+      </div>
 
-<button type="submit">Analyze MRI</button>
+      <div class="btn-row" style="margin-top: 20px;">
+        <button type="submit" class="btn-predict" id="predictBtn">
+          <span class="btn-text">Analyse Scan →</span>
+          <span class="spinner"></span>
+        </button>
+        <button type="button" class="btn-clear" id="clearBtn">✕ Clear</button>
+      </div>
+    </form>
+
+    <!-- Result (Jinja2 template) -->
+    {% if prediction %}
+    <div class="result-card show {% if 'Non' in prediction %}normal{% else %}positive{% endif %}">
+      <div class="result-header">
+        <div class="result-dot"></div>
+        <div class="result-title">Prediction Result</div>
+      </div>
+      <div class="result-value">{{ prediction }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Divider -->
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">Detectable Stages</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- Stages Info -->
+    <div class="stages-grid">
+      <div class="stage-item">
+        <div class="stage-dot" style="background:#4fa3e0;"></div>
+        Non-Demented
+      </div>
+      <div class="stage-item">
+        <div class="stage-dot" style="background:#f0c040;"></div>
+        Very Mild
+      </div>
+      <div class="stage-item">
+        <div class="stage-dot" style="background:#f08040;"></div>
+        Mild Demented
+      </div>
+      <div class="stage-item">
+        <div class="stage-dot" style="background:#e05050;"></div>
+        Moderate
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer">For clinical research use only · Not a substitute for professional medical diagnosis</p>
 
 </div>
-
-</form>
-
-<div class="preview" id="imagePreview"></div>
-
-<div class="loader" id="loader">
-<div class="spinner"></div>
-<p>AI analyzing MRI scan...</p>
-</div>
-
-{% if prediction %}
-
-<div class="result">
-Prediction Result: {{ prediction }}
-</div>
-
-{% endif %}
-
-</div>
-
-</div>
-
-<footer>
-
-AI Medical Imaging System • Alzheimer Detection using Deep Learning
-
-</footer>
 
 <script>
+  const fileInput = document.getElementById('fileInput');
+  const filePreview = document.getElementById('filePreview');
+  const fileName = document.getElementById('fileName');
+  const clearBtn = document.getElementById('clearBtn');
+  const predictBtn = document.getElementById('predictBtn');
+  const dropZone = document.getElementById('dropZone');
+  const form = document.getElementById('uploadForm');
 
-/* IMAGE PREVIEW */
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      fileName.textContent = fileInput.files[0].name;
+      filePreview.classList.add('show');
+    }
+  });
 
-function previewImage(event){
+  clearBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    filePreview.classList.remove('show');
+    fileName.textContent = '';
+  });
 
-const preview=document.getElementById('imagePreview');
+  form.addEventListener('submit', () => {
+    predictBtn.classList.add('loading');
+  });
 
-preview.innerHTML="";
-
-const img=document.createElement("img");
-
-img.src=URL.createObjectURL(event.target.files[0]);
-
-preview.appendChild(img);
-
-}
-
-/* LOADER */
-
-function showLoader(){
-
-document.getElementById("loader").style.display="block";
-
-}
-
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      fileName.textContent = e.dataTransfer.files[0].name;
+      filePreview.classList.add('show');
+    }
+  });
 </script>
-
 </body>
 </html>
